@@ -43,7 +43,7 @@ export function SignupPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Cadastro realizado com sucesso! Verifique seu e-mail para confirmação.");
+      toast.success("Cadastro realizado com sucesso! Você já pode fazer o login.");
       navigate("/login");
     },
     onError: (error) => {
