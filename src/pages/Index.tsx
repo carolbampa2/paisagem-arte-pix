@@ -1,62 +1,70 @@
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Package2 } from 'lucide-react';
+import { ProductGrid } from "@/components/marketplace/ProductGrid";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Search, ListFilter } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Index = () => {
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="px-4 lg:px-6 h-14 flex items-center">
-        <Link to="#" className="flex items-center justify-center">
-          <Package2 className="h-6 w-6" />
-          <span className="sr-only">Paisagem</span>
-        </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Link
-            to="/login"
-            className="text-sm font-medium hover:underline underline-offset-4"
-          >
-            Login
-          </Link>
-          <Link
-            to="/signup"
-            className="text-sm font-medium hover:underline underline-offset-4"
-          >
-            Cadastro
-          </Link>
-        </nav>
-      </header>
-      <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                  Sua Arte, Seu Produto, Sua Marca.
-                </h1>
-                <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-                  Bem-vindo à Paisagem, o marketplace onde artistas transformam
-                  suas obras em produtos únicos. Venda sua arte, nós cuidamos da
-                  produção e da entrega.
-                </p>
-              </div>
-              <div className="space-x-4">
-                <Button asChild>
-                  <Link to="/signup">Quero ser Artista</Link>
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link to="#">Explorar Obras</Link>
-                </Button>
-              </div>
+    <section className="container mx-auto px-4 md:px-6 py-8">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+        <div className="w-full md:w-1/2">
+            <h1 className="text-3xl font-bold tracking-tight">Explore as Obras</h1>
+            <p className="text-muted-foreground">Encontre arte única para estampar sua vida.</p>
+        </div>
+        <div className="flex w-full md:w-1/2 items-center gap-4">
+            <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                    placeholder="Buscar por artista ou obra..."
+                    className="pl-10 w-full"
+                />
             </div>
-          </div>
-        </section>
-      </main>
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-muted-foreground">
-          &copy; 2025 Paisagem. Todos os direitos reservados.
-        </p>
-      </footer>
-    </div>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="shrink-0">
+                        <ListFilter className="mr-2 h-4 w-4" />
+                        Filtros
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem checked>
+                        Camisetas
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem>
+                        Pôsteres
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Ordenar por</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                     <DropdownMenuCheckboxItem>
+                        Mais Relevantes
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem>
+                        Mais Recentes
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem>
+                        Preço: Menor para Maior
+                    </DropdownMenuCheckboxItem>
+                     <DropdownMenuCheckboxItem>
+                        Preço: Maior para Menor
+                    </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+      </div>
+
+      <ProductGrid />
+    </section>
   );
 };
 
