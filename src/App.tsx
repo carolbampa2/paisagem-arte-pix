@@ -9,7 +9,8 @@ import { SignupPage } from "./pages/auth/SignupPage";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./layouts/ProtectedRoute";
 import Dashboard from "./pages/dashboard/Dashboard";
-import HomeRedirect from "./pages/HomeRedirect";
+import PublicLayout from "./layouts/PublicLayout";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -21,12 +22,15 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public Routes */}
+            {/* Public Routes with PublicLayout */}
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<Index />} />
+              {/* Add other public routes here, e.g., product details */}
+            </Route>
+
+            {/* Standalone Public Routes (no layout) */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
-
-            {/* Redirect logic for root path */}
-            <Route path="/" element={<HomeRedirect />} />
 
             {/* Protected Routes */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
