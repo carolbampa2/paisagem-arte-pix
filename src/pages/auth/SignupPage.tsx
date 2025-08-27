@@ -29,7 +29,8 @@ export function SignupPage() {
 
   const { mutate: signup, isPending } = useMutation({
     mutationFn: async ({ email, password, fullName, role, pixKey }: { email: string; password: string; fullName: string; role: 'buyer' | 'artist'; pixKey?: string }) => {
-      const { error } = await supabase.auth.signUp({
+      // Step 1: Sign up the user in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -40,7 +41,20 @@ export function SignupPage() {
           },
         },
       });
-      if (error) throw error;
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Cadastro bem-sucedido, mas os dados do usuário não foram retornados.");
+
+      // Step 2: Invoke the Edge Function to create the profile
+      const { error: functionError } = await supabase.functions.invoke('create-profile', {
+        body: { user: authData.user },
+      });
+
+      if (functionError) {
+        // Here you might want to try and delete the auth user for a clean rollback
+        // For now, we'll just throw the error.
+        throw new Error(`Erro ao criar perfil: ${functionError.message}`);
+      }
     },
     onSuccess: () => {
       toast.success("Cadastro realizado com sucesso! Você já pode fazer o login.");
