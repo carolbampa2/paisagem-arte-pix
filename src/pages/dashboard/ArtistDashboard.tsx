@@ -1,12 +1,39 @@
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FilePlus2, DollarSign, Package, Users } from "lucide-react";
+import { DollarSign, Package } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { Terminal, Loader2 } from "lucide-react";
+import { ArtworkUploadDialog } from "@/components/marketplace/ArtworkUploadDialog";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Database } from "@/integrations/supabase/types";
+
+type Artwork = Database['public']['Tables']['artworks']['Row'];
+
+const fetchArtistArtworks = async (artistId: string): Promise<Artwork[]> => {
+    const { data, error } = await supabase
+        .from('artworks')
+        .select('*')
+        .eq('artist_id', artistId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        throw new Error(error.message);
+    }
+    return data || [];
+};
 
 const ArtistDashboard = () => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
+
+  const { data: artworks, isLoading } = useQuery({
+    queryKey: ['artist-artworks', user?.id],
+    queryFn: () => fetchArtistArtworks(user!.id),
+    enabled: !!user, // Only run the query if the user is available
+  });
+
 
   if (!profile?.is_approved) {
     return (
@@ -46,8 +73,8 @@ const ArtistDashboard = () => {
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">R$ 4.231,89</div>
-                    <p className="text-xs text-muted-foreground">+20.1% do último mês</p>
+                    <div className="text-2xl font-bold">R$ 0,00</div>
+                    <p className="text-xs text-muted-foreground">Dados fictícios</p>
                 </CardContent>
             </Card>
             <Card>
@@ -56,8 +83,8 @@ const ArtistDashboard = () => {
                     <Package className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">+235</div>
-                    <p className="text-xs text-muted-foreground">+180.1% do último mês</p>
+                    <div className="text-2xl font-bold">0</div>
+                     <p className="text-xs text-muted-foreground">Dados fictícios</p>
                 </CardContent>
             </Card>
         </div>
@@ -68,13 +95,45 @@ const ArtistDashboard = () => {
                     <CardTitle>Minhas Obras</CardTitle>
                     <CardDescription>Gerencie suas obras de arte e produtos.</CardDescription>
                 </div>
-                <Button>
-                    <FilePlus2 className="mr-2 h-4 w-4" /> Enviar Nova Obra
-                </Button>
+                <ArtworkUploadDialog />
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground">Você ainda não enviou nenhuma obra. Clique no botão acima para começar.</p>
-                {/* Placeholder for artworks list */}
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-40">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Título</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Data de Envio</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {artworks && artworks.length > 0 ? (
+                            artworks.map((artwork) => (
+                                <TableRow key={artwork.id}>
+                                    <TableCell className="font-medium">{artwork.title}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={artwork.status === 'approved' ? 'default' : artwork.status === 'rejected' ? 'destructive' : 'outline'}>
+                                            {artwork.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>{new Date(artwork.created_at!).toLocaleDateString('pt-BR')}</TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={3} className="text-center">
+                                    Você ainda não enviou nenhuma obra.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                        </TableBody>
+                    </Table>
+                )}
             </CardContent>
         </Card>
     </div>

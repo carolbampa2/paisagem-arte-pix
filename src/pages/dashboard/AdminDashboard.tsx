@@ -2,11 +2,84 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { DollarSign, Package, Users, CheckCircle, XCircle } from "lucide-react";
+import { DollarSign, Package, Users, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
+
+type Profile = Database['public']['Tables']['profiles']['Row'];
+
+const fetchPendingArtists = async (): Promise<Profile[]> => {
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'artist')
+        .eq('is_approved', false);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+    return data || [];
+};
 
 const AdminDashboard = () => {
   const { profile } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: pendingArtists, isLoading, error } = useQuery({
+    queryKey: ['pending-artists'],
+    queryFn: fetchPendingArtists,
+  });
+
+  const approveArtistMutation = useMutation({
+    mutationFn: async (userId: string) => {
+        const { error } = await supabase
+            .from('profiles')
+            .update({ is_approved: true, updated_at: new Date().toISOString() })
+            .eq('user_id', userId);
+        if (error) throw error;
+    },
+    onSuccess: () => {
+        toast.success("Artista aprovado com sucesso!");
+        queryClient.invalidateQueries({ queryKey: ['pending-artists'] });
+    },
+    onError: (error) => {
+        toast.error(`Erro ao aprovar artista: ${error.message}`);
+    }
+  });
+
+  const rejectArtistMutation = useMutation({
+    mutationFn: async (userId: string) => {
+        // This is a hard delete. In a real app, you might want to soft delete.
+        // We need to call an RPC function to delete the user from auth.users as well.
+        // For now, let's just delete the profile for simplicity.
+        // A proper implementation would require a cascading delete or a server-side function.
+        const { error } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('user_id', userId);
+        if (error) throw error;
+    },
+    onSuccess: () => {
+        toast.success("Artista rejeitado com sucesso!");
+        queryClient.invalidateQueries({ queryKey: ['pending-artists'] });
+    },
+    onError: (error) => {
+        toast.error(`Erro ao rejeitar artista: ${error.message}`);
+    }
+  });
+
+  const handleApprove = (userId: string) => {
+    approveArtistMutation.mutate(userId);
+  };
+
+  const handleReject = (userId: string) => {
+    if (window.confirm("Tem certeza que deseja rejeitar e remover este artista? Esta ação não pode ser desfeita.")) {
+        rejectArtistMutation.mutate(userId);
+    }
+  };
+
 
   return (
     <div className="flex flex-col gap-4">
@@ -17,35 +90,9 @@ const AdminDashboard = () => {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Vendas Totais</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">R$ 231.231,89</div>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Artistas Ativos</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">+120</div>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Produtos Cadastrados</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">+842</div>
-            </CardContent>
-        </Card>
-      </div>
+       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* These cards would also be populated by real data in a real app */}
+       </div>
 
       <Card>
         <CardHeader>
@@ -53,51 +100,52 @@ const AdminDashboard = () => {
           <CardDescription>Aprove ou rejeite os novos cadastros de artistas.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Artista</TableHead>
-                <TableHead>Chave PIX</TableHead>
-                <TableHead>Data de Cadastro</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {/* Placeholder Data */}
-              <TableRow>
-                <TableCell>
-                  <div className="font-medium">Artista Pendente 1</div>
-                  <div className="text-sm text-muted-foreground">artista1@email.com</div>
-                </TableCell>
-                <TableCell>123.456.789-00</TableCell>
-                <TableCell>25/08/2025</TableCell>
-                <TableCell className="text-right">
-                    <Button variant="outline" size="sm" className="mr-2">
-                        <CheckCircle className="h-4 w-4 text-green-500"/>
-                    </Button>
-                    <Button variant="outline" size="sm">
-                        <XCircle className="h-4 w-4 text-red-500"/>
-                    </Button>
-                </TableCell>
-              </TableRow>
-               <TableRow>
-                <TableCell>
-                  <div className="font-medium">Artista Pendente 2</div>
-                  <div className="text-sm text-muted-foreground">artista2@email.com</div>
-                </TableCell>
-                <TableCell>outro@email.com</TableCell>
-                <TableCell>24/08/2025</TableCell>
-                <TableCell className="text-right">
-                    <Button variant="outline" size="sm" className="mr-2">
-                        <CheckCircle className="h-4 w-4 text-green-500"/>
-                    </Button>
-                    <Button variant="outline" size="sm">
-                        <XCircle className="h-4 w-4 text-red-500"/>
-                    </Button>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+            {isLoading ? (
+                <div className="flex justify-center items-center h-40">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+            ) : error ? (
+                <div className="text-red-500 text-center">Erro ao carregar artistas.</div>
+            ) : (
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead>Artista</TableHead>
+                        <TableHead>Chave PIX</TableHead>
+                        <TableHead>Data de Cadastro</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {pendingArtists && pendingArtists.length > 0 ? (
+                        pendingArtists.map((artist) => (
+                            <TableRow key={artist.id}>
+                                <TableCell>
+                                <div className="font-medium">{artist.full_name}</div>
+                                <div className="text-sm text-muted-foreground">{artist.email}</div>
+                                </TableCell>
+                                <TableCell>{artist.pix_key}</TableCell>
+                                <TableCell>{new Date(artist.created_at!).toLocaleDateString('pt-BR')}</TableCell>
+                                <TableCell className="text-right">
+                                    <Button variant="outline" size="sm" className="mr-2" onClick={() => handleApprove(artist.user_id)} disabled={approveArtistMutation.isPending}>
+                                        <CheckCircle className="h-4 w-4 text-green-500"/>
+                                    </Button>
+                                    <Button variant="outline" size="sm" onClick={() => handleReject(artist.user_id)} disabled={rejectArtistMutation.isPending}>
+                                        <XCircle className="h-4 w-4 text-red-500"/>
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))
+                    ) : (
+                        <TableRow>
+                            <TableCell colSpan={4} className="text-center">
+                                Nenhum artista pendente.
+                            </TableCell>
+                        </TableRow>
+                    )}
+                    </TableBody>
+                </Table>
+            )}
         </CardContent>
       </Card>
     </div>
