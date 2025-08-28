@@ -37,15 +37,20 @@ Deno.serve(async (req) => {
     const fullName = metadata.full_name || 'Usuário';
     const pixKey = metadata.pix_key;
 
-    // Insert the new profile
+    // Upsert the new profile. This is safer than insert() as it handles the race condition
+    // where the old trigger might have already created the profile.
     const { data, error } = await supabaseAdmin
       .from('profiles')
-      .insert({
+      .upsert({
         user_id: user.id,
         email: user.email,
         full_name: fullName,
         role: role,
         pix_key: pixKey,
+        // We also need to set updated_at manually as upsert doesn't trigger db functions by default
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id',
       })
       .select()
       .single();
