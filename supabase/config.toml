@@ -1,1 +1,7 @@
 project_id = "bzejialpqzlapkrybwet"
+
+[functions.admin-actions]
+verify_jwt = true
+
+[functions.create-profile]
+verify_jwt = false

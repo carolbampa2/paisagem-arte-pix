@@ -34,10 +34,9 @@ const AdminDashboard = () => {
 
   const approveArtistMutation = useMutation({
     mutationFn: async (userId: string) => {
-        const { error } = await supabase
-            .from('profiles')
-            .update({ is_approved: true, updated_at: new Date().toISOString() })
-            .eq('user_id', userId);
+        const { error } = await supabase.functions.invoke('admin-actions', {
+            body: { action: 'approve', userId }
+        });
         if (error) throw error;
     },
     onSuccess: () => {
@@ -51,14 +50,9 @@ const AdminDashboard = () => {
 
   const rejectArtistMutation = useMutation({
     mutationFn: async (userId: string) => {
-        // This is a hard delete. In a real app, you might want to soft delete.
-        // We need to call an RPC function to delete the user from auth.users as well.
-        // For now, let's just delete the profile for simplicity.
-        // A proper implementation would require a cascading delete or a server-side function.
-        const { error } = await supabase
-            .from('profiles')
-            .delete()
-            .eq('user_id', userId);
+        const { error } = await supabase.functions.invoke('admin-actions', {
+            body: { action: 'reject', userId }
+        });
         if (error) throw error;
     },
     onSuccess: () => {
