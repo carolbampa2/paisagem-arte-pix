@@ -81,10 +81,10 @@ export function SignupPage() {
               <TabsTrigger value="artist">Artista</TabsTrigger>
             </TabsList>
             <TabsContent value="buyer">
-              <BuyerSignupForm isPending={isPending} onSubmit={(values) => signup({ ...values, role: 'buyer' })} />
+              <BuyerSignupForm isPending={isPending} onSubmit={(values) => signup({ email: values.email, password: values.password, fullName: values.fullName, role: 'buyer' })} />
             </TabsContent>
             <TabsContent value="artist">
-              <ArtistSignupForm isPending={isPending} onSubmit={(values) => signup({ ...values, role: 'artist', pixKey: values.pixKey })} />
+              <ArtistSignupForm isPending={isPending} onSubmit={(values) => signup({ email: values.email, password: values.password, fullName: values.fullName, role: 'artist', pixKey: values.pixKey })} />
             </TabsContent>
           </Tabs>
           <div className="mt-4 text-center text-sm">
