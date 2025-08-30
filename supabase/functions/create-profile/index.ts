@@ -19,9 +19,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { user }: { user: User } = await req.json();
+    console.log('Create profile function called with request method:', req.method);
+    const requestBody = await req.json();
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    
+    const { user }: { user: User } = requestBody;
 
     if (!user) {
+        console.error("User data is missing from the request body.");
         throw new Error("User data is missing from the request body.");
     }
 
