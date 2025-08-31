@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { useEffect } from "react";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "E-mail inválido." }),
@@ -17,6 +19,16 @@ const loginSchema = z.object({
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+  
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      console.log('LoginPage: User already authenticated, redirecting to dashboard');
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
