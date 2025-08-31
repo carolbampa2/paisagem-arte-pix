@@ -29,7 +29,10 @@ export function SignupPage() {
 
   const { mutate: signup, isPending } = useMutation({
     mutationFn: async ({ email, password, fullName, role, pixKey }: { email: string; password: string; fullName: string; role: 'buyer' | 'artist'; pixKey?: string }) => {
+      console.log('Starting signup process for:', { email, role });
+      
       // Step 1: Sign up the user in Supabase Auth
+      console.log('Step 1: Calling supabase.auth.signUp');
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -43,19 +46,31 @@ export function SignupPage() {
         },
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Cadastro bem-sucedido, mas os dados do usuário não foram retornados.");
+      console.log('Auth signup result:', { authData, authError });
+
+      if (authError) {
+        console.error('Auth signup error:', authError);
+        throw authError;
+      }
+      if (!authData.user) {
+        console.error('No user data returned from auth signup');
+        throw new Error("Cadastro bem-sucedido, mas os dados do usuário não foram retornados.");
+      }
 
       // Step 2: Invoke the Edge Function to create the profile
+      console.log('Step 2: Calling create-profile edge function with user:', authData.user.id);
       const { error: functionError } = await supabase.functions.invoke('create-profile', {
         body: { user: authData.user },
       });
 
+      console.log('Edge function result:', { functionError });
+
       if (functionError) {
-        // Here you might want to try and delete the auth user for a clean rollback
-        // For now, we'll just throw the error.
+        console.error('Edge function error:', functionError);
         throw new Error(`Erro ao criar perfil: ${functionError.message}`);
       }
+      
+      console.log('Signup process completed successfully');
     },
     onSuccess: () => {
       toast.success("Cadastro realizado com sucesso! Você já pode fazer o login.");
