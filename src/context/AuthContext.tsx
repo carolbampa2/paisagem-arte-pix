@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
@@ -23,15 +24,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const getSession = async () => {
+      console.log('AuthContext: Getting initial session...');
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('AuthContext: Initial session:', session);
+      
       setSession(session);
       setUser(session?.user ?? null);
+      
       if (session?.user) {
-        const { data: userProfile } = await supabase
+        console.log('AuthContext: Fetching profile for user:', session.user.id);
+        const { data: userProfile, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('user_id', session.user.id)
           .single();
+        
+        console.log('AuthContext: Profile data:', userProfile);
+        console.log('AuthContext: Profile error:', error);
         setProfile(userProfile);
       }
       setLoading(false);
@@ -40,20 +49,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     getSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
+        console.log('AuthContext: Auth state changed:', event, session);
+        
         setSession(session);
         setUser(session?.user ?? null);
+        
         if (session?.user) {
           setLoading(true);
-          const { data: userProfile } = await supabase
+          console.log('AuthContext: Fetching profile for user after auth change:', session.user.id);
+          const { data: userProfile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('user_id', session.user.id)
             .single();
+          
+          console.log('AuthContext: Profile data after auth change:', userProfile);
+          console.log('AuthContext: Profile error after auth change:', error);
           setProfile(userProfile);
           setLoading(false);
         } else {
           setProfile(null);
+          setLoading(false);
         }
       }
     );
