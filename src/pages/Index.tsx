@@ -2,6 +2,9 @@ import { ProductGrid } from "@/components/marketplace/ProductGrid";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, ListFilter } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +15,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
+
   return (
     <section className="container mx-auto px-4 md:px-6 py-8">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">

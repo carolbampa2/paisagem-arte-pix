@@ -35,7 +35,7 @@ export function LoginPage() {
     },
     onSuccess: () => {
       toast.success("Login realizado com sucesso!");
-      navigate("/"); // Redirect to dashboard or home
+      navigate("/dashboard"); // Redirect to dashboard after login
     },
     onError: (error) => {
       toast.error(error.message || "Ocorreu um erro ao fazer login.");
