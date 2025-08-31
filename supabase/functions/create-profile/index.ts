@@ -10,6 +10,11 @@ interface User {
     role?: 'artist' | 'buyer';
     pix_key?: string;
   };
+  user_metadata?: {
+    full_name?: string;
+    role?: 'artist' | 'buyer';
+    pix_key?: string;
+  };
 }
 
 Deno.serve(async (req) => {
@@ -36,11 +41,13 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Extract metadata
-    const metadata = user.raw_user_meta_data || {};
+    // Extract metadata from either source
+    const metadata = user.raw_user_meta_data || user.user_metadata || {};
     const role = metadata.role || 'buyer';
     const fullName = metadata.full_name || 'Usuário';
     const pixKey = metadata.pix_key;
+    
+    console.log('Extracted metadata:', { role, fullName, pixKey });
 
     // Upsert the new profile. This is safer than insert() as it handles the race condition
     // where the old trigger might have already created the profile.
