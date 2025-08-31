@@ -27,17 +27,21 @@ export function LoginPage() {
 
   const { mutate: login, isPending } = useMutation({
     mutationFn: async ({ email, password }: z.infer<typeof loginSchema>) => {
+      console.log('LoginPage: Starting login attempt...');
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      console.log('LoginPage: Login response received, error:', error);
       if (error) throw error;
     },
     onSuccess: () => {
+      console.log('LoginPage: Login successful, navigating to dashboard...');
       toast.success("Login realizado com sucesso!");
       navigate("/dashboard"); // Redirect to dashboard after login
     },
     onError: (error) => {
+      console.log('LoginPage: Login error:', error);
       toast.error(error.message || "Ocorreu um erro ao fazer login.");
     },
   });
